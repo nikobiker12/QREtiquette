@@ -47,20 +47,19 @@
 
         <div style="margin-top:8px">
           <div style="font-size:14px;color:var(--muted)">Email</div>
-          <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-            <button id="mailtoBtn" class="link-btn" type="button">Send email</button>
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center;justify-content:space-between">
+            <div style="font-family:monospace;font-size:16px" id="emailDisplay">ntheron12@hotmail.fr</div>
+            <a id="mailtoBtn" class="link-btn" href="#">Send email</a>
           </div>
         </div>
       </div>
 
-      <div class="actions">
-        <button id="notifyBtn" class="btn" aria-label="Notify owner">Notify owner</button>
-      </div>
+      <!-- Notify button removed: notifications are sent automatically on page load -->
 
     </div>
   </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <!-- toast removed: notifications handled silently -->
 
   <script>
     // CONFIG - replace NOTIFY_ENDPOINT with your Worker or relay URL if needed
@@ -74,16 +73,7 @@
     document.getElementById('callBtn').href = 'tel:' + PHONE_E164;
     document.getElementById('smsBtn').href = 'sms:' + PHONE_E164 + '?body=' + encodeURIComponent('Found item - I am contacting you');
 
-    const notifyBtn = document.getElementById('notifyBtn');
-    const toast = document.getElementById('toast');
     const mailtoBtn = document.getElementById('mailtoBtn');
-
-    function showToast(msg, ok=true){
-      toast.textContent = msg;
-      toast.style.display = 'block';
-      toast.style.borderColor = ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-      setTimeout(()=> toast.style.display = 'none', 4000);
-    }
 
     async function sendNotify(silent=false) {
       try {
@@ -100,46 +90,31 @@
           credentials: 'omit'
         });
         if (resp.ok) {
-          if (!silent) showToast('Owner notified');
           return true;
         } else {
-          if (!silent) showToast('Notification failed', false);
           return false;
         }
       } catch (err) {
-        if (!silent) showToast('Network error', false);
         return false;
       }
     }
 
-    // Button manual notify
-    notifyBtn.addEventListener('click', async () => {
-      notifyBtn.disabled = true;
-      const originalText = notifyBtn.textContent;
-      notifyBtn.textContent = 'Sending...';
-      const spinner = document.createElement('span'); spinner.className = 'spinner';
-      notifyBtn.appendChild(spinner);
-      await sendNotify(false);
-      notifyBtn.disabled = false;
-      notifyBtn.textContent = originalText;
-    });
+    // Manual notify removed — notifications are sent automatically on load (silent)
 
     // Build and open mailto with a nicely formatted body (no ugly percent-encoding shown to the user)
-    mailtoBtn.addEventListener('click', () => {
-      const subject = 'Found item';
-      const bodyLines = [
-        'Hello,',
-        '',
-        'I found an item that may be yours.',
-        '',
-        'Location (if known):',
-        '',
-        'Regards.'
-      ];
-      const body = bodyLines.join('\n');
-      const mailto = 'mailto:' + OWNER_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-      window.location.href = mailto;
-    });
+    // Display owner email and build mailto href (matches Call/SMS behaviour)
+    document.getElementById('emailDisplay').textContent = OWNER_EMAIL;
+    const mailtoSubject = 'Found item';
+    const mailtoBody = [
+      'Hello,',
+      '',
+      'I found an item that may be yours.',
+      '',
+      'Location (if known):',
+      '',
+      'Regards.'
+    ].join('\n');
+    mailtoBtn.href = 'mailto:' + OWNER_EMAIL + '?subject=' + encodeURIComponent(mailtoSubject) + '&body=' + encodeURIComponent(mailtoBody);
 
     // Auto notify on page load (silent)
     window.addEventListener('load', async () => {
