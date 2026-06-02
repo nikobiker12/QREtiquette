@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Found item</title>
+  <style>
+    :root{
+      --bg:#0f1720; --card:#0b1220; --accent:#06b6d4; --text:#e6eef6;
+      --muted:#9fb0c0; --success:#10b981; --danger:#ef4444;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#071025 0%, #0b1220 100%);color:var(--text)}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{width:100%;max-width:420px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:14px;padding:18px;box-shadow:0 6px 24px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    h1{margin:0 0 8px;font-size:20px}
+    p.lead{margin:0 0 14px;color:var(--muted);font-size:14px}
+    .contact{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+    .contact .phone{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);padding:10px;border-radius:10px}
+    .btn{display:block;width:100%;padding:14px;border-radius:12px;border:0;background:linear-gradient(90deg,var(--accent),#0ea5a3);color:#042027;font-weight:700;font-size:16px;cursor:pointer}
+    .btn:disabled{opacity:0.6;cursor:default}
+    .actions{display:flex;gap:8px;margin-bottom:10px}
+    .action-btn{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text);font-weight:600;cursor:pointer;text-align:center}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:#021826;color:var(--text);padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(2,6,23,0.6);display:none}
+    .spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,0.12);border-top-color:var(--text);border-radius:50%;display:inline-block;vertical-align:middle;margin-left:8px;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    a.link-btn{display:inline-block;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.03);color:var(--text);text-decoration:none;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="main" aria-labelledby="title">
+      <h1 id="title">Found item</h1>
+      <p class="lead">This page will notify the owner automatically when opened. You can also call, send an SMS, or email the owner directly.</p>
+
+      <div class="contact">
+        <div style="font-size:12px;color:var(--muted)">Owner contact</div>
+        <div class="phone">
+          <div>
+            <div style="font-size:14px;color:var(--muted)">Phone</div>
+            <div style="font-family:monospace;font-size:16px" id="phoneDisplay">+33 6 87 31 04 08</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <a id="callBtn" class="link-btn" href="tel:+33687310408">Call</a>
+            <a id="smsBtn" class="link-btn" href="sms:+33687310408?body=Found%20item%20-%20I%20am%20contacting%20you">SMS</a>
+          </div>
+        </div>
+
+        <div style="margin-top:8px">
+          <div style="font-size:14px;color:var(--muted)">Email</div>
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+            <button id="mailtoBtn" class="link-btn" type="button">Send email</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="notifyBtn" class="btn" aria-label="Notify owner">Notify owner</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // CONFIG - replace NOTIFY_ENDPOINT with your Worker or relay URL if needed
+    const PHONE_DISPLAY = '+33 6 87 31 04 08';
+    const PHONE_E164 = '+33687310408';
+    const OWNER_EMAIL = 'ntheron12@hotmail.fr';
+    const NOTIFY_ENDPOINT = '/api/notify'; // example: 'https://bagage.home-terrier.ovh/api/notify'
+
+    // UI init
+    document.getElementById('phoneDisplay').textContent = PHONE_DISPLAY;
+    document.getElementById('callBtn').href = 'tel:' + PHONE_E164;
+    document.getElementById('smsBtn').href = 'sms:' + PHONE_E164 + '?body=' + encodeURIComponent('Found item - I am contacting you');
+
+    const notifyBtn = document.getElementById('notifyBtn');
+    const toast = document.getElementById('toast');
+    const mailtoBtn = document.getElementById('mailtoBtn');
+
+    function showToast(msg, ok=true){
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      toast.style.borderColor = ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+      setTimeout(()=> toast.style.display = 'none', 4000);
+    }
+
+    async function sendNotify(silent=false) {
+      try {
+        const payload = {
+          phone: PHONE_E164,
+          email: OWNER_EMAIL,
+          location: 'scan_web',
+          time: new Date().toISOString()
+        };
+        const resp = await fetch(NOTIFY_ENDPOINT, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload),
+          credentials: 'omit'
+        });
+        if (resp.ok) {
+          if (!silent) showToast('Owner notified');
+          return true;
+        } else {
+          if (!silent) showToast('Notification failed', false);
+          return false;
+        }
+      } catch (err) {
+        if (!silent) showToast('Network error', false);
+        return false;
+      }
+    }
+
+    // Button manual notify
+    notifyBtn.addEventListener('click', async () => {
+      notifyBtn.disabled = true;
+      const originalText = notifyBtn.textContent;
+      notifyBtn.textContent = 'Sending...';
+      const spinner = document.createElement('span'); spinner.className = 'spinner';
+      notifyBtn.appendChild(spinner);
+      await sendNotify(false);
+      notifyBtn.disabled = false;
+      notifyBtn.textContent = originalText;
+    });
+
+    // Build and open mailto with a nicely formatted body (no ugly percent-encoding shown to the user)
+    mailtoBtn.addEventListener('click', () => {
+      const subject = 'Found item';
+      const bodyLines = [
+        'Hello,',
+        '',
+        'I found an item that may be yours.',
+        '',
+        'Location (if known):',
+        '',
+        'Regards.'
+      ];
+      const body = bodyLines.join('\n');
+      const mailto = 'mailto:' + OWNER_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      window.location.href = mailto;
+    });
+
+    // Auto notify on page load (silent)
+    window.addEventListener('load', async () => {
+      await sendNotify(true);
+    }, { once: true });
+  </script>
+</body>
+</html>
