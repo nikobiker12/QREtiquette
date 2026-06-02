@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Labels 70x40 mm — Titre sur 2 lignes, email agrandi</title>
+<style>
+  /* Page A4 portrait, imprimer à 100% */
+  @page { size: 210mm 297mm; margin: 0; }
+  html,body{height:100%;margin:0;padding:0;background:#fff;font-family:system-ui,Arial}
+  .page { width:210mm; height:297mm; box-sizing:border-box; padding:6mm; }
+
+  /* Conteneur moitié supérieure */
+  .half { width:100%; height:148.5mm; box-sizing:border-box; display:flex; align-items:flex-start; justify-content:center; }
+
+  /* Table 3x4 : 3 colonnes, 4 lignes (la dernière ligne = étiquettes classiques) */
+  table.labels {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 210mm; /* 3 * 70mm */
+    table-layout: fixed;
+  }
+  table.labels td {
+    width: 70mm;
+    height: 40mm;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    position: relative;
+    vertical-align: middle;
+    /* Cadre imprimable, coins carrés */
+    border: 0.6mm solid #000;
+    border-radius: 0; /* coins carrés */
+    overflow: visible;
+  }
+
+  /* Contenu qui prend toute la place de l'étiquette avec padding interne */
+  .content {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: 3mm; /* padding interne demandé */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4mm;
+  }
+
+  /* QR réduit et texte : QR compact */
+  .qr { width:28mm; height:28mm; flex:0 0 28mm; display:block; }
+  .text {
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    min-width:0;
+    overflow:hidden;
+  }
+
+  /* Police unifiée et adaptée pour impression */
+  :root {
+    --label-font-size: 16pt;
+    --label-line-height: 1;
+  }
+  .text, .classic {
+    font-size: var(--label-font-size);
+    line-height: var(--label-line-height);
+  }
+
+  /* Titre sur deux lignes, pas de wrap imprévu, ligne 2 plus grande */
+  .title {
+    font-weight:800;
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    line-height:1;
+  }
+  .title .line1 {
+    font-size:14pt;
+    white-space:nowrap;
+  }
+  .title .line2 {
+    font-size:14pt; /* ligne 2 agrandie */
+    white-space:nowrap;
+    margin-top:1mm;
+  }
+
+  /* Ligne classique : occupe toute la cellule, texte centré verticalement et horizontalement */
+  .classic {
+    box-sizing:border-box;
+    width:100%;
+    height:100%;
+    padding:3mm;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:2px;
+    font-size:var(--label-font-size);
+  }
+  .classic .line1 { font-weight:700; }
+  .classic .line2 { font-weight:800; margin-top:1mm; }
+  .classic .phone { font-weight:800; margin-top:1mm; }
+  .classic .email { font-weight:800; margin-top:1mm; font-size:11pt; } /* dernière ligne agrandie */
+
+  /* Repères de coupe : petites lignes aux 4 coins (position absolue) */
+  .crop-mark {
+    position:absolute;
+    width:0;
+    height:0;
+    pointer-events:none;
+  }
+  .crop-mark::before, .crop-mark::after {
+    content:"";
+    position:absolute;
+    background:#000;
+  }
+  /* top-left */
+  .crop-tl::before { left:-3.5mm; top:-0.5mm; width:7mm; height:0.4mm; }
+  .crop-tl::after  { left:-0.5mm; top:-3.5mm; width:0.4mm; height:7mm; }
+  /* top-right */
+  .crop-tr::before { right:-3.5mm; top:-0.5mm; width:7mm; height:0.4mm; }
+  .crop-tr::after  { right:-0.5mm; top:-3.5mm; width:0.4mm; height:7mm; }
+  /* bottom-left */
+  .crop-bl::before { left:-3.5mm; bottom:-0.5mm; width:7mm; height:0.4mm; }
+  .crop-bl::after  { left:-0.5mm; bottom:-3.5mm; width:0.4mm; height:7mm; }
+  /* bottom-right */
+  .crop-br::before { right:-3.5mm; bottom:-0.5mm; width:7mm; height:0.4mm; }
+  .crop-br::after  { right:-0.5mm; bottom:-3.5mm; width:0.4mm; height:7mm; }
+
+  /* Impression : optimiser rendu */
+  @media print {
+    body, .page { background: #fff; }
+    img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  /* Moitié inférieure vide (laisser pour découpe) */
+  .half-empty { width:100%; height:148.5mm; box-sizing:border-box; display:block; margin-top:0mm; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <!-- MOITIÉ SUPÉRIEURE : grille 3x4 (la dernière ligne = classiques) -->
+    <div class="half" aria-label="Top half with labels">
+      <table class="labels" role="presentation" aria-hidden="false">
+        <tbody>
+          <!-- Lignes 1 à 3 : QR + titre (3x3) -->
+          <tr>
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="content">
+                <img class="qr" alt="QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=0&data=https://qretiquette.pages.dev" />
+                <div class="text">
+                  <div class="title">
+                    <span class="line1">If Found</span>
+                    <span class="line2">Scan me</span>
+                  </div>
+                </div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+          </tr>
+
+          <!-- LIGNE AJOUTÉE : 1 ligne avec 3 étiquettes "classiques" (même taille, remplissent la cellule) -->
+          <tr>
+            <td>
+              <div class="classic" role="group" aria-label="Classic label 1">
+                <div class="line1">If Found Call</div>
+                <div class="line2">THERON Nicolas</div>
+                <div class="phone">+33 6 87 31 04 08</div>
+                <div class="email">ntheron12@hotmail.fr</div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="classic" role="group" aria-label="Classic label 2">
+                <div class="line1">If Found Call</div>
+                <div class="line2">THERON Nicolas</div>
+                <div class="phone">+33 6 87 31 04 08</div>
+                <div class="email">ntheron12@hotmail.fr</div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+
+            <td>
+              <div class="classic" role="group" aria-label="Classic label 3">
+                <div class="line1">If Found Call</div>
+                <div class="line2">THERON Nicolas</div>
+                <div class="phone">+33 6 87 31 04 08</div>
+                <div class="email">ntheron12@hotmail.fr</div>
+              </div>
+              <div class="crop-mark crop-tl"></div>
+              <div class="crop-mark crop-tr"></div>
+              <div class="crop-mark crop-bl"></div>
+              <div class="crop-mark crop-br"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOITIÉ INFÉRIEURE : vide -->
+    <div class="half-empty" aria-hidden="true"></div>
+  </div>
+</body>
+</html>
