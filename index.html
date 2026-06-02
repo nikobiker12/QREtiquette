@@ -116,9 +116,12 @@
     ].join('\n');
     mailtoBtn.href = 'mailto:' + OWNER_EMAIL + '?subject=' + encodeURIComponent(mailtoSubject) + '&body=' + encodeURIComponent(mailtoBody);
 
-    // Auto notify on page load (silent)
-    window.addEventListener('load', async () => {
-      await sendNotify(true);
+    // Auto notify on page load — call Cloudflare function and log result
+    window.addEventListener('load', () => {
+      fetch('/api/notify?uid=123')
+        .then(r => r.json())
+        .then((data) => console.log('notify response', data))
+        .catch(err => console.error('notify fetch error', err));
     }, { once: true });
   </script>
 </body>
